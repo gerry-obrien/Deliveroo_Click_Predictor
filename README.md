@@ -1,6 +1,8 @@
 # 🚲 Deliveroo AI Suite
 
 ## Overview
+5 person team project. (M. Das, A. Susarla, A. Garipov, A. Ivashkevich, G. O'Brien)
+
 This Streamlit dashboard uses Machine Learning (XGBoost) to predict customer click conversion likelihood based on session data.
 
 ## Features
