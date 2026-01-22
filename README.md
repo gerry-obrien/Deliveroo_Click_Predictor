@@ -11,3 +11,6 @@ This Streamlit dashboard uses Machine Learning (XGBoost) to predict customer cli
 ## How to Run
 1. Install requirements: `pip install -r requirements.txt`
 2. Run the app: `streamlit run app.py`
+
+## OR
+Link: https://deliveroo-customer-insights.streamlit.app/
