@@ -35,8 +35,6 @@ st.markdown("""
 
 @st.cache_data
 def load_rdata(file_bytes: bytes):
-    # pyreadr can read from a file path OR a file-like object.
-    # We'll write bytes to a temp file to be safe across environments.
     import tempfile
 
     with tempfile.NamedTemporaryFile(suffix=".RData", delete=False) as tmp:
@@ -68,10 +66,10 @@ if uploaded_rdata is not None:
 elif use_local:
     # Load from local file
     try:
-        result = pyreadr.read_r("DeliveryAdClick.RData")
+        result = pyreadr.read_r("data/DeliveryAdClick.RData")
         st.sidebar.success("Loaded local DeliveryAdClick.RData ✅")
     except FileNotFoundError:
-        st.sidebar.error("🚨 'DeliveryAdClick.RData' not found in this folder.")
+        st.sidebar.error("🚨 File not found. Please ensure 'data/DeliveryAdClick.RData' exists.")
         st.stop()
     except Exception as e:
         st.sidebar.error(f"Failed to read local RData: {e}")
@@ -95,7 +93,7 @@ st.session_state["df_new"] = df_new
 st.sidebar.write(f"Train rows: {df_train.shape[0]:,} | cols: {df_train.shape[1]:,}")
 st.sidebar.write(f"Pred rows: {df_new.shape[0]:,} | cols: {df_new.shape[1]:,}")
 
-TARGET_COL = "Clicks_Conversion"  # <- keep your original for now
+TARGET_COL = "Clicks_Conversion"
 
 if TARGET_COL not in df_train.columns:
     st.error(f"Target column '{TARGET_COL}' not found in training data. Columns: {list(df_train.columns)[:20]} ...")
@@ -117,7 +115,7 @@ with st.expander("🔍 Preview datasets"):
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 
 # -----------------------------
-# 1. UPDATED MODEL PIPELINE
+# 1. MODEL PIPELINE
 # -----------------------------
 def build_xgb_pipeline(X):
     # Identify numeric vs categorical columns
@@ -145,7 +143,6 @@ def build_xgb_pipeline(X):
     )
 
     # Base Model - Parameters will be set by GridSearchCV
-    # We name this step 'classifier' to match your param dictionary
     model = XGBClassifier(
         eval_metric='logloss', 
         random_state=42,
@@ -155,7 +152,7 @@ def build_xgb_pipeline(X):
     # Full Pipeline
     pipe = Pipeline(steps=[
         ("preprocess", preprocessor),
-        ("classifier", model) # <--- Named 'classifier' to match params
+        ("classifier", model) # Named 'classifier' to match params
     ])
     
     return pipe
@@ -184,7 +181,7 @@ def train_xgb_and_store(X: pd.DataFrame, y: pd.Series, val_size=0.2):
         'classifier__max_depth': [3]
     }
 
-    # 4. Run Grid Search (Even with 1 param set, this is useful for Cross Validation)
+    # 4. Run Grid Search
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
     
     grid = GridSearchCV(
@@ -620,13 +617,6 @@ with tab2:
     )
 
 
-
-
-
-
-
-
-
 # -----------------------------
 # TAB 3: SINGLE PREDICTION
 # -----------------------------
@@ -693,7 +683,7 @@ with tab3:
             prob = model.predict_proba(input_data)[0][1]
             
             # --- USE SIDEBAR THRESHOLD INSTEAD OF 0.5 ---
-            # 'threshold' variable comes from the slider in your sidebar
+            # 'threshold' variable comes from the slider in sidebar
             is_click = prob > threshold 
             
             st.subheader("Prediction Results")
@@ -717,7 +707,7 @@ with tab3:
                     number ={
                     "suffix": "%",
                     "font": {
-                        "size": 40,        # ⬅️ smaller number (try 36–44)
+                        "size": 40,
                         "color": "white"
                     },
                     "valueformat": ".1f"
@@ -765,7 +755,7 @@ with tab4:
                 # Append to Dataframe
                 df_new['Click_Probability'] = probs
                 
-                # We still calculate "Likely Click" for the Summary KPIs (using threshold)
+                # Still calculate "Likely Click" for the Summary KPIs (using threshold)
                 df_new['Predicted_Status'] = (probs > threshold).astype(int)
                 df_new['Status_Label'] = df_new['Predicted_Status'].map({1: 'Likely Click', 0: 'No Click'})
                 
